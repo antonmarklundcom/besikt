@@ -1,0 +1,236 @@
+// Rapportverket — Prisma schema
+// Neon.tech PostgreSQL (EU region). See README for the local-only db push/seed
+// workflow (Hostinger SSH cannot reach Neon over IPv6).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  INSPECTOR
+}
+
+enum LeadType {
+  SLUTBESIKTNING
+  STATUSBESIKTNING
+  SKADEUTREDNING
+}
+
+enum LeadStatus {
+  NY
+  PAGAENDE
+  GRANSKNING
+  GODKAND
+  SKICKAD
+  ARKIVERAD
+}
+
+enum LeadSource {
+  FORM
+  MANUAL
+  GHL
+}
+
+// Which section of a report a photo belongs to. BILDER = generic photo grid
+// (statusbesiktning), BEDOMNING = skadeutredning section 4 interleaved photos.
+enum PhotoSection {
+  BILDER
+  BEDOMNING
+  OBSERVATION
+  OVRIGT
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Auth / people
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(INSPECTOR)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  inspector       Inspector?
+  approvedReports Report[]   @relation("ApprovedBy")
+}
+
+model Inspector {
+  id                 String  @id @default(cuid())
+  userId             String? @unique
+  name               String
+  title              String  @default("Certifierad besiktningsman SBR")
+  certBody           String  @default("SBR")
+  certNumber         String? // e.g. "KIWA 12345"
+  signatureImagePath String?
+  email              String?
+  phone              String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ---------------------------------------------------------------------------
+// Leads / reports
+// ---------------------------------------------------------------------------
+
+model Lead {
+  id        String     @id @default(cuid())
+  refNumber String     @unique // auto e.g. "EK-2026-001"
+  type      LeadType
+  status    LeadStatus @default(NY)
+  source    LeadSource @default(FORM)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // beställare (client)
+  clientName    String
+  clientEmail   String?
+  clientPhone   String?
+  clientAddress String?
+  clientPostal  String?
+
+  // objekt / fastighet
+  propertyDesignation String? // e.g. "BJÄLKEN 6, STOCKHOLM"
+  propertyAddress     String?
+  propertyPostal      String?
+
+  inspectionDate DateTime?
+  notes          String?   @db.Text
+
+  contractors Contractor[]
+  reports     Report[]
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Contractor {
+  id          String  @id @default(cuid())
+  leadId      String
+  companyName String
+  orgNr       String?
+  contactName String?
+  email       String?
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
+
+model Report {
+  id           String    @id @default(cuid())
+  leadId       String
+  version      Int       @default(1)
+  dataJson     Json      @default("{}")
+  docxPath     String?
+  pdfPath      String?
+  generatedAt  DateTime?
+  approvedAt   DateTime?
+  approvedById String?
+  sentAt       DateTime?
+  sentTo       String[]  @default([])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  lead       Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  approvedBy User?       @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  findings   Finding[]
+  photos     Photo[]
+  qualityDocs QualityDoc[]
+  emailLogs  EmailLog[]
+
+  @@unique([leadId, version])
+  @@index([leadId])
+}
+
+model Finding {
+  id          String  @id @default(cuid())
+  reportId    String
+  sortOrder   Int     @default(0)
+  bet         String? // "H" (hantverkaren ansvarig) or null
+  delRum      String? // Del / Rum
+  felText     String  @db.Text
+  avhjalpt    Boolean @default(false)
+  avhjalptSign String?
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+model Photo {
+  id        String       @id @default(cuid())
+  reportId  String
+  filePath  String
+  caption   String?
+  sortOrder Int          @default(0)
+  section   PhotoSection @default(BILDER)
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+model QualityDoc {
+  id       String    @id @default(cuid())
+  reportId String
+  label    String
+  docDate  DateTime?
+  sortOrder Int      @default(0)
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+model EmailLog {
+  id         String      @id @default(cuid())
+  reportId   String
+  to         String[]    @default([])
+  subject    String
+  provider   String      @default("resend")
+  providerId String?
+  status     EmailStatus @default(QUEUED)
+  sentAt     DateTime    @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+// ---------------------------------------------------------------------------
+// App settings (company block, default email templates, webhook secret note)
+// Single-row table (id = "singleton").
+// ---------------------------------------------------------------------------
+
+model AppSettings {
+  id                String   @id @default("singleton")
+  companyName       String   @default("Entreprenadkonsulterna Sthlm AB")
+  companyOrgNr      String?
+  companyAddress    String?
+  companyPostal     String?
+  companyPhone      String?
+  companyEmail      String?
+  emailSubjectTmpl  String   @default("Utlåtande {typ} – {objekt}")
+  emailBodyTmpl     String   @default("Hej,\n\nBifogat finner ni utlåtande för {objekt}.\n\nMed vänliga hälsningar\n{företag}") @db.Text
+  updatedAt         DateTime @updatedAt
+}
