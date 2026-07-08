@@ -1,6 +1,6 @@
 import path from "path";
 import { randomUUID } from "crypto";
-import { PhotoSection } from "@prisma/client";
+import { PhotoSection, type Photo } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { compressImage } from "@/lib/images";
 import { photosDir, writeFileEnsured, toRelPath } from "@/lib/storage";
@@ -18,22 +18,22 @@ export type IncomingPhoto = {
 
 /**
  * Compress + store photos for a report and create Photo rows.
- * Returns the number stored. Non-image / oversized files are skipped silently
- * so one bad file doesn't fail the whole intake.
+ * Returns the created rows. Non-image / oversized files are skipped silently so
+ * one bad file doesn't fail the whole upload.
  */
 export async function storePhotos(
   reportId: string,
   files: IncomingPhoto[],
   section: PhotoSection = PhotoSection.BILDER
-): Promise<number> {
+): Promise<Photo[]> {
   const dir = photosDir(reportId);
 
   const existing = await prisma.photo.count({ where: { reportId } });
   let sortOrder = existing;
-  let stored = 0;
+  const created: Photo[] = [];
 
   for (const file of files) {
-    if (stored + existing >= MAX_PHOTOS) break;
+    if (existing + created.length >= MAX_PHOTOS) break;
     if (!ACCEPTED.test(file.mimeType)) continue;
     if (file.buffer.byteLength > MAX_PHOTO_BYTES) continue;
 
@@ -42,7 +42,7 @@ export async function storePhotos(
     const absolute = path.join(dir, filename);
     await writeFileEnsured(absolute, compressed);
 
-    await prisma.photo.create({
+    const row = await prisma.photo.create({
       data: {
         reportId,
         filePath: toRelPath(absolute),
@@ -51,8 +51,8 @@ export async function storePhotos(
         section,
       },
     });
-    stored++;
+    created.push(row);
   }
 
-  return stored;
+  return created;
 }

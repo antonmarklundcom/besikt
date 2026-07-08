@@ -80,7 +80,7 @@ export async function POST(req: Request) {
   let storedPhotos = 0;
   if (photos.length) {
     try {
-      storedPhotos = await storePhotos(reportId, photos);
+      storedPhotos = (await storePhotos(reportId, photos)).length;
     } catch (err) {
       // A failed photo shouldn't lose the lead — it's already created.
       console.error("Photo storage failed for report", reportId, err);
