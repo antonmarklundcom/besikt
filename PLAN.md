@@ -204,6 +204,18 @@ Build/lint clean, PROGRESS.md, 3-line summary, STOP.
 5. At deploy time: follow README runbook (hPanel env vars, deploy, then
    `NEXTAUTH_URL` swap after domain mapping + redeploy)
 
+## Approved future scope (user-confirmed, build only when asked)
+
+- **PDF download link in the send email** in addition to the attachment
+  (2026-07-09): a tokenized `GET /api/public/reports/[token]/pdf` link included
+  in the Resend email body. Attachment remains primary.
+- **Client portal (v2, out of current brief)**: potential clients log in to
+  follow their project. Prefer magic-link (email) auth over Google for
+  outsiders; needs a CLIENT role + per-lead access checks. Do NOT start without
+  an explicit go-ahead.
+- **Google sign-in for internal users**: small NextAuth addition; only on
+  request.
+
 ## Open questions for the user (ask, don't guess)
 
 - Real GHL field names for the webhook mapper (current mapping is a guess).

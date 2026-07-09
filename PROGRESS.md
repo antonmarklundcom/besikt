@@ -12,7 +12,7 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
 | 1 | Prisma schema + Neon + NextAuth + seed admin | ✅ done |
 | 2 | Intake form + webhook endpoint + lead queue dashboard | ✅ done |
 | 3 | Lead editor (all tabs, autosave, fel-tabell CRUD, photo upload with sharp) | ✅ done |
-| 4 | Templates + PLACEHOLDERS.md + docxtemplater generation + PDF adapter + preview | ⬜ pending |
+| 4 | Templates + PLACEHOLDERS.md + docxtemplater generation + PDF adapter + preview | ✅ done |
 | 5 | Approve flow + Resend email + EmailLog + versioning | ⬜ pending |
 | 6 | Settings, GDPR delete, polish, README with deploy runbook | ⬜ pending |
 
@@ -68,6 +68,38 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
   per-photo caption/section/reorder with debounced `PATCH …/photos`, delete via
   `DELETE /api/photos/[id]` (unlinks file). Auth’d image streaming through
   `GET /api/photos/[id]` (photos stay outside /public for GDPR).
+
+### Phase 4 — done
+- Three starter templates (`templates/*.docx`) built programmatically by
+  `scripts/build-templates.ts` (`npm run templates:build`) with the `docx` lib;
+  committed so the user can restyle them in Word. Full contract documented in
+  `templates/PLACEHOLDERS.md` (Swedish, incl. restyling rules, loop/table/image
+  constraints, recovery command).
+- `buildTemplateData` (src/lib/generation/template-data.ts) is the single
+  source of truth for all tags; consumed by BOTH the docx renderer and the HTML
+  preview so they cannot drift. Tags are ASCII snake_case (Word autocorrect
+  mangles å/ä/ö in tags).
+- `renderDocx` uses docxtemplater + pizzip + docxtemplater-image-module-free
+  (free module only). Gotchas handled: image tags must be alone in a paragraph;
+  the free module only accepts STRING tag values, so structured ImageValue
+  objects are encoded to `path|w|h` at render time; missing image files fall
+  back to a blank 1×1 PNG instead of failing generation; `nullGetter` returns
+  "" so a user-removed tag never blocks generation.
+- `POST /api/reports/[id]/generate` (allowed only in NY/PAGAENDE/GRANSKNING —
+  after Godkänn files are a locked snapshot), writes
+  `storage/reports/{id}/generated/{ref}_{typ}_{objekt-slug}_v{n}.docx`,
+  clears stale pdfPath on regenerate, prunes renamed leftovers for the current
+  version only. `GET /api/reports/[id]/files/docx|pdf` streams with auth.
+- PDF adapter (`src/lib/pdf/`): `convertToPdf()` with `none` (default, throws
+  PdfDisabledError) / `ilovepdf` / `cloudconvert` providers, plain fetch, no
+  SDKs. When enabled, generate auto-converts; failure never loses the docx.
+- Manual-PDF flow (PDF_PROVIDER=none): `POST/DELETE /api/reports/[id]/pdf`
+  (magic-bytes validation, stored next to the docx; allowed incl. GODKAND since
+  it doesn't alter the data snapshot). Lead page got a "Dokument" panel
+  (generate/download/upload) + collapsible HTML preview.
+- `npm run smoke:generate` renders all three templates from realistic fixtures
+  (27 fel rows, photos, signature) without a database — verified: 28 table rows
+  (header+27), images embedded, zero unresolved tags.
 
 ## Deviations from the brief
 
