@@ -31,7 +31,13 @@ function saveLabel(status: string): string {
   }
 }
 
-export function LeadEditor({ initial }: { initial: EditorState }) {
+export function LeadEditor({
+  initial,
+  locked = false,
+}: {
+  initial: EditorState;
+  locked?: boolean;
+}) {
   const [lead, setLead] = useState<LeadScalars>(initial.lead);
   const [dataJson, setDataJson] = useState<Record<string, unknown>>(
     initial.dataJson
@@ -54,8 +60,9 @@ export function LeadEditor({ initial }: { initial: EditorState }) {
       firstRun.current = false;
       return;
     }
+    if (locked) return; // locked snapshot: the API would 409 anyway
     schedule({ lead, dataJson, contractors, findings, qualityDocs });
-  }, [lead, dataJson, contractors, findings, qualityDocs, schedule]);
+  }, [lead, dataJson, contractors, findings, qualityDocs, schedule, locked]);
 
   const tabs = useMemo<TabItem[]>(() => {
     const t: TabItem[] = [
@@ -76,6 +83,12 @@ export function LeadEditor({ initial }: { initial: EditorState }) {
 
   return (
     <div className="space-y-6">
+      {locked && (
+        <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Rapporten är låst (godkänd/skickad/arkiverad) — fälten är skrivskyddade.
+          Skapa en ny version för att göra ändringar.
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <TabBar tabs={tabs} active={active} onChange={setActive} />
         <span
@@ -88,6 +101,7 @@ export function LeadEditor({ initial }: { initial: EditorState }) {
         </span>
       </div>
 
+      <fieldset disabled={locked} className="min-w-0 space-y-6">
       {active === "parter" && (
         <ParterTab
           type={initial.type}
@@ -125,6 +139,7 @@ export function LeadEditor({ initial }: { initial: EditorState }) {
           setQualityDocs={setQualityDocs}
         />
       )}
+      </fieldset>
     </div>
   );
 }

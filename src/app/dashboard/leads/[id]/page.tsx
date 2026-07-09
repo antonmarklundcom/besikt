@@ -9,6 +9,7 @@ import { isPdfEnabled } from "@/lib/pdf";
 import { LeadEditor } from "./lead-editor";
 import { DocumentPanel } from "./document-panel";
 import { HtmlPreview } from "./html-preview";
+import { ActionsPanel } from "./actions-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           findings: { orderBy: { sortOrder: "asc" } },
           photos: { orderBy: { sortOrder: "asc" } },
           qualityDocs: { orderBy: { sortOrder: "asc" } },
+          emailLogs: { orderBy: { sentAt: "desc" } },
         },
       },
     },
@@ -57,6 +59,32 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
     inspector,
     settings,
   });
+
+  // Send-panel prefills (§4.3): recipients from beställare + contractors,
+  // subject/body from the AppSettings templates.
+  const objektLabel =
+    lead.propertyDesignation || lead.propertyAddress || lead.refNumber;
+  const defaultTo = Array.from(
+    new Set(
+      [lead.clientEmail, ...lead.contractors.map((c) => c.email)]
+        .map((e) => e?.trim() ?? "")
+        .filter(Boolean)
+    )
+  );
+  const subjectTmpl = settings?.emailSubjectTmpl ?? "Utlåtande {typ} – {objekt}";
+  const bodyTmpl =
+    settings?.emailBodyTmpl ??
+    "Hej,\n\nBifogat finner ni utlåtande för {objekt}.\n\nMed vänliga hälsningar\n{företag}";
+  const companyName = settings?.companyName ?? "Entreprenadkonsulterna Sthlm AB";
+  const fill = (tmpl: string) =>
+    tmpl
+      .replaceAll("{typ}", TYPE_LABELS[lead.type])
+      .replaceAll("{objekt}", objektLabel)
+      .replaceAll("{företag}", companyName);
+
+  const emailLogs = lead.reports.flatMap((r) =>
+    r.emailLogs.map((log) => ({ ...log, version: r.version }))
+  );
 
   const initial = {
     reportId: current.id,
@@ -142,6 +170,21 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
         />
       </div>
 
+      <div className="mb-6">
+        <ActionsPanel
+          leadId={lead.id}
+          reportId={current.id}
+          status={lead.status}
+          hasDocx={Boolean(current.docxPath)}
+          hasPdf={Boolean(current.pdfPath)}
+          approvedAt={fmtTs(current.approvedAt)}
+          sentAt={fmtTs(current.sentAt)}
+          defaultTo={defaultTo}
+          defaultSubject={fill(subjectTmpl)}
+          defaultBody={fill(bodyTmpl)}
+        />
+      </div>
+
       <details className="mb-6 rounded-lg border">
         <summary className="cursor-pointer select-none p-4 text-sm font-medium">
           Förhandsgranskning (HTML)
@@ -151,7 +194,81 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
         </div>
       </details>
 
-      <LeadEditor initial={initial} />
+      <LeadEditor initial={initial} locked={LOCKED.includes(lead.status)} />
+
+      {lead.reports.length > 1 && (
+        <section className="mt-8 space-y-2">
+          <h2 className="text-sm font-semibold">Tidigare versioner</h2>
+          <ul className="space-y-2">
+            {lead.reports.slice(1).map((r) => (
+              <li
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm"
+              >
+                <span className="font-medium">Version {r.version}</span>
+                <span className="text-muted-foreground">
+                  {r.generatedAt ? `Genererad ${fmtTs(r.generatedAt)}` : "Ej genererad"}
+                  {r.sentAt ? ` · Skickad ${fmtTs(r.sentAt)}` : ""}
+                </span>
+                <span className="flex gap-3">
+                  {r.docxPath && (
+                    <a
+                      href={`/api/reports/${r.id}/files/docx`}
+                      className="underline underline-offset-4"
+                    >
+                      .docx
+                    </a>
+                  )}
+                  {r.pdfPath && (
+                    <a
+                      href={`/api/reports/${r.id}/files/pdf`}
+                      className="underline underline-offset-4"
+                    >
+                      PDF
+                    </a>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {emailLogs.length > 0 && (
+        <section className="mt-8 space-y-2">
+          <h2 className="text-sm font-semibold">Utskickshistorik</h2>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left">
+                  <th className="p-2 font-medium">Datum</th>
+                  <th className="p-2 font-medium">Version</th>
+                  <th className="p-2 font-medium">Till</th>
+                  <th className="p-2 font-medium">Ämne</th>
+                  <th className="p-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {emailLogs.map((log) => (
+                  <tr key={log.id} className="border-b align-top">
+                    <td className="p-2 whitespace-nowrap">{fmtTs(log.sentAt)}</td>
+                    <td className="p-2">v{log.version}</td>
+                    <td className="p-2">{log.to.join(", ")}</td>
+                    <td className="p-2">{log.subject}</td>
+                    <td className="p-2">
+                      {log.status === "SENT" ? "Skickad" : log.status === "FAILED" ? "Misslyckad" : "Köad"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </main>
   );
+}
+
+function fmtTs(d: Date | null): string | null {
+  return d ? d.toISOString().slice(0, 16).replace("T", " ") : null;
 }

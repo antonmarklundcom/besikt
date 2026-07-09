@@ -13,7 +13,7 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
 | 2 | Intake form + webhook endpoint + lead queue dashboard | ✅ done |
 | 3 | Lead editor (all tabs, autosave, fel-tabell CRUD, photo upload with sharp) | ✅ done |
 | 4 | Templates + PLACEHOLDERS.md + docxtemplater generation + PDF adapter + preview | ✅ done |
-| 5 | Approve flow + Resend email + EmailLog + versioning | ⬜ pending |
+| 5 | Approve flow + Resend email + EmailLog + versioning | ✅ done |
 | 6 | Settings, GDPR delete, polish, README with deploy runbook | ⬜ pending |
 
 ## Phase notes
@@ -100,6 +100,29 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
 - `npm run smoke:generate` renders all three templates from realistic fixtures
   (27 fel rows, photos, signature) without a database — verified: 28 table rows
   (header+27), images embedded, zero unresolved tags.
+
+### Phase 5 — done
+- `POST /api/reports/[id]/approve`: requires a generated docx, sets lead
+  GODKAND + `approvedAt/approvedById`; the existing 409 guards now lock all
+  editing. `POST …/reopen` undoes approval (GODKAND → GRANSKNING) **only while
+  not sent** — after SKICKAD the snapshot stands and Ny version is the path.
+- `POST /api/reports/[id]/send`: **server-side hard gate — refuses with 403
+  unless lead.status === GODKAND** (§6, independent of UI). Validates
+  recipients (zod), requires ≥1 attachment, streams the version's PDF and/or
+  docx from disk, sends via Resend (`RESEND_API_KEY`/`MAIL_FROM`, 503 when
+  unconfigured), writes an EmailLog row (SENT with providerId / FAILED), then
+  sets report `sentAt`/`sentTo` and lead SKICKAD in one transaction.
+- `POST /api/leads/[id]/new-version` (allowed in GODKAND/SKICKAD): clones
+  dataJson + findings + qualityDocs, **copies photo files on disk** into the
+  new report's dir (versions never share files, so GDPR-deleting one can't
+  break another), resets generated/approved/sent fields, lead → PAGAENDE.
+- Lead page: "Godkännande & utskick" panel (Godkänn with confirm; send form
+  prefilled with beställare+hantverkare addresses and AppSettings
+  subject/body templates with `{typ}/{objekt}/{företag}` filled; PDF/docx
+  attachment checkboxes; Ångra godkännande; Ny version). Read-only list of
+  previous versions with their still-downloadable files + full
+  utskickshistorik table across versions. Editor now disables all fields
+  (native `fieldset disabled`) with an explanatory banner when locked.
 
 ## Deviations from the brief
 
