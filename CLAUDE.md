@@ -24,8 +24,11 @@ phases. Update PROGRESS.md and commit it alongside every phase.
 4. **All UI text in Swedish. Mobile-first.**
 5. **No features outside the brief.** Ambiguity → ask the user, don't guess.
 6. **Nothing emails without lead status = GODKAND, enforced server-side.**
-7. **Work on branch `claude/besiktning-app-build-tkcnnm`; PR #1 is the running
-   PR** — push updates it, never open a new PR.
+7. **Work on branch `claude/besiktning-app-build-tkcnnm`.** Workflow since the
+   first merge: each phase is pushed to this branch and gets its own PR to
+   `main`; the user merges it. After a merge, restart the branch from
+   `origin/main` (`git checkout -B <branch> origin/main`, force-with-lease
+   push) before the next phase — never stack commits on merged history.
 8. **After each phase:** `npm run build` + `npm run lint` must be clean, update
    PROGRESS.md, commit, push, give the user a 3-line summary, then STOP and
    wait for their "continue" before the next phase.
