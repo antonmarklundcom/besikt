@@ -14,7 +14,7 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
 | 3 | Lead editor (all tabs, autosave, fel-tabell CRUD, photo upload with sharp) | ✅ done |
 | 4 | Templates + PLACEHOLDERS.md + docxtemplater generation + PDF adapter + preview | ✅ done |
 | 5 | Approve flow + Resend email + EmailLog + versioning | ✅ done |
-| 6 | Settings, GDPR delete, polish, README with deploy runbook | ⬜ pending |
+| 6 | Settings, GDPR delete, polish, README with deploy runbook | ✅ done |
 
 ## Phase notes
 
@@ -123,6 +123,53 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
   previous versions with their still-downloadable files + full
   utskickshistorik table across versions. Editor now disables all fields
   (native `fieldset disabled`) with an explanatory banner when locked.
+
+### Phase 6 — done
+- `/dashboard/settings` (ADMIN-only, gated in the page **and** in every API):
+  company block + default email templates (`PATCH /api/settings`, upserts the
+  `AppSettings` singleton), inspector profiles CRUD (`POST /api/inspectors`,
+  `PATCH`/`DELETE /api/inspectors/[id]`) incl. signature image upload
+  (`POST`/`DELETE /api/inspectors/[id]/signature` — reuses the sharp pipeline,
+  stored under `storage/inspectors/{id}/signature.jpg`; auth'd `GET` stream for
+  the preview, kept outside /public like photos). Webhook secret shown
+  read-only from `WEBHOOK_SECRET` with reveal/copy. New `requireAdmin()` guard
+  in `api-auth.ts`.
+- GDPR (§7) on the lead page: **Arkivera** (`POST /api/leads/[id]/archive` →
+  status ARKIVERAD, keeps data) and **Radera** (`DELETE /api/leads/[id]` →
+  `removeReportDir` for every version's files, deletes Report [cascades
+  Finding/Photo/QualityDoc/EmailLog] + Contractor rows, **anonymises** the lead
+  (clientName → "Raderad", nulls contact/property/notes, keeps
+  refNumber+type+timestamps), status ARKIVERAD). Danger-styled panel with
+  confirms; Radera redirects to the leadkö.
+- README.md: Swedish deploy runbook — local PowerShell setup (one command per
+  step, `Set-Content -Encoding utf8`), env var table, the **Hostinger
+  IPv6/SSH-to-Neon warning in bold**, `NEXTAUTH_URL`-swap-then-redeploy step,
+  retention/GDPR policy, PDF-provider switch instructions.
+- Polish: dashboard already has an empty state + mobile card layout; added an
+  app icon (`src/app/icon.svg`) so the browser tab has a favicon; title already
+  set in the root layout.
+- Gates: `npm run build` + `npm run lint` clean; `npm run smoke:generate`
+  renders all three templates without errors.
+
+### BRIEF §11 acceptance checklist — how each was verified
+- **Intake slutbesiktning → lead NY**: Phase 2 intake endpoint creates Lead(NY)
+  + Report v1 + contractors + compressed photos (code-verified; not re-run here
+  since it needs a live DB).
+- **Edit + 27 fel rows + generate → .docx table/photos/signature**: covered by
+  `npm run smoke:generate` (27 fel rows, embedded photos, signature block; run
+  this phase — all three render clean).
+- **PDF_PROVIDER=none manual upload + HTML preview + docx download**: Phase 4
+  manual-PDF route + HTML preview reuse `buildTemplateData` (code-verified).
+- **Send blocked before Godkänn; after Godkänn email + EmailLog**: Phase 5
+  server-side 403 gate on `lead.status !== GODKAND` (code-verified).
+- **Ny version clones data; v1 files downloadable**: Phase 5 new-version route
+  copies photo files + rows, previous versions listed read-only (code-verified).
+- **All three types generate**: `npm run smoke:generate` ✅.
+- **Radera removes files from disk**: `DELETE /api/leads/[id]` calls
+  `removeReportDir` per version before anonymising (code-verified).
+
+_DB-dependent items above are verified by reading the implementing code; the
+user runs the full click-through locally against Neon per the user-side track._
 
 ## Deviations from the brief
 

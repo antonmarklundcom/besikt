@@ -20,6 +20,10 @@ export function generatedDir(reportId: string): string {
   return path.join(reportDir(reportId), "generated");
 }
 
+export function inspectorDir(inspectorId: string): string {
+  return path.join(STORAGE_DIR, "inspectors", inspectorId);
+}
+
 export async function ensureDir(dir: string): Promise<void> {
   await fs.mkdir(dir, { recursive: true });
 }
@@ -54,4 +58,9 @@ export async function removeFile(filePath: string): Promise<void> {
 /** Recursively delete a report's entire storage directory (GDPR delete). */
 export async function removeReportDir(reportId: string): Promise<void> {
   await fs.rm(reportDir(reportId), { recursive: true, force: true });
+}
+
+/** Recursively delete an inspector's storage directory (signature image). */
+export async function removeInspectorDir(inspectorId: string): Promise<void> {
+  await fs.rm(inspectorDir(inspectorId), { recursive: true, force: true });
 }

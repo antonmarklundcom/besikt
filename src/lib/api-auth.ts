@@ -19,3 +19,24 @@ export async function requireSession(): Promise<
   }
   return { session };
 }
+
+/**
+ * Like requireSession() but additionally requires the ADMIN role (§4.4 —
+ * Settings and inspector management are admin-only). Enforced in the APIs, not
+ * just the page, so a non-admin can't hit the endpoints directly.
+ */
+export async function requireAdmin(): Promise<
+  { session: Session } | { response: NextResponse }
+> {
+  const auth = await requireSession();
+  if ("response" in auth) return auth;
+  if (auth.session.user.role !== "ADMIN") {
+    return {
+      response: NextResponse.json(
+        { error: "Endast administratörer." },
+        { status: 403 }
+      ),
+    };
+  }
+  return auth;
+}
