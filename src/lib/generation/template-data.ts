@@ -121,6 +121,9 @@ export type CommonData = {
 
 export type SlutData = CommonData & {
   hantverkare: { namn: string; orgnr: string; kontakt: string; epost: string }[];
+  avtalsform: string;
+  narvarande_bestallare: string;
+  narvarande_hantverkare: string;
   omfattning: string;
   tid: string;
   kallelse_datum: string;
@@ -130,6 +133,7 @@ export type SlutData = CommonData & {
   kostnad: string;
   godkand_text: string;
   godkand_datum: string;
+  godkannande_text: string; // composed sentence, e.g. "Arbetena godkänns 2026-01-20."
   reklamationsfrister: string;
   avhjalpande_deadline: string;
   ovriga_noteringar: string;
@@ -146,6 +150,7 @@ export type StatusData = CommonData & {
 };
 
 export type SkadeData = CommonData & {
+  narvarande_bestallare: string;
   bakgrund: string;
   observationer: { punkt: string }[];
   orsak: string;
@@ -299,6 +304,9 @@ export async function buildTemplateData(input: BuildInput): Promise<TemplateData
         kontakt: c.contactName ?? "",
         epost: c.email ?? "",
       })),
+      avtalsform: str(d, "avtalsform") || "Konsumenttjänster",
+      narvarande_bestallare: str(d, "narvarandeBestallare"),
+      narvarande_hantverkare: str(d, "narvarandeHantverkare"),
       omfattning: str(d, "omfattning"),
       tid: str(d, "tid"),
       kallelse_datum: str(d, "kallelseDate"),
@@ -316,6 +324,9 @@ export async function buildTemplateData(input: BuildInput): Promise<TemplateData
       kostnad: fmtCurrency(d["kostnadAvhjalpande"]),
       godkand_text: d["godkand"] ? "Godkänd" : "Ej godkänd",
       godkand_datum: str(d, "godkandDate"),
+      godkannande_text: d["godkand"]
+        ? `Arbetena godkänns${str(d, "godkandDate") ? " " + str(d, "godkandDate") : ""}.`
+        : "Arbetena godkänns inte.",
       reklamationsfrister: str(d, "reklamationsfrister"),
       avhjalpande_deadline: str(d, "avhjalpandeDeadline"),
       ovriga_noteringar: str(d, "ovrigaNoteringar"),
@@ -378,6 +389,7 @@ export async function buildTemplateData(input: BuildInput): Promise<TemplateData
 
   const data: SkadeData = {
     ...common,
+    narvarande_bestallare: str(d, "narvarandeBestallare"),
     bakgrund: str(d, "bakgrund"),
     observationer: lines(str(d, "observationer")).map((punkt) => ({ punkt })),
     orsak: str(d, "orsak"),

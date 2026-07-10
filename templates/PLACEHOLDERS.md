@@ -99,8 +99,14 @@ Radbrytningar i inmatad text bevaras (fritextfält kan innehålla flera stycken)
 |---|---|
 | `{numrering_text}` | Standardtexten om numrering (”Fönster, dörrar, väggar …”) |
 
-Sidnumreringen ”Sid X(Y)” är vanliga Word-fält (PAGE/NUMPAGES) i sidfoten —
+Sidnumreringen ”Sid X(Y)” är vanliga Word-fält (PAGE/NUMPAGES) i sidhuvudet —
 inga taggar, stila fritt.
+
+**Logotyper:** företagsloggan och SBB-loggan i sidhuvudet är vanliga inbäddade
+bilder (inte taggar) — byt ut dem direkt i Word om de behöver uppdateras.
+
+**Sidfötter:** första sidan har företagsblocket (`{foretag_*}`-taggar); övriga
+sidor har ”Filnamn: {filnamn} {datum}”. Båda kan stilas om fritt.
 
 ---
 
@@ -119,6 +125,9 @@ stycken (de raderna försvinner i det färdiga dokumentet).
 ### Sektioner
 | Tagg | Innehåll |
 |---|---|
+| `{avtalsform}` | T.ex. ”Konsumenttjänster” (standardvärde) |
+| `{narvarande_bestallare}` | Närvarande för beställaren |
+| `{narvarande_hantverkare}` | Närvarande för hantverkaren (flera rader ok) |
 | `{omfattning}` | Fritext |
 | `{tid}` | Fritext, t.ex. ”2026-06-15 kl. 09:00–12:00” |
 | `{kallelse_datum}` | Datum |
@@ -126,8 +135,9 @@ stycken (de raderna försvinner i det färdiga dokumentet).
 | `{kostnad}` | Formaterad kostnad, t.ex. ”35 000 kr” |
 | `{godkand_text}` | ”Godkänd” eller ”Ej godkänd” |
 | `{godkand_datum}` | Datum för besked |
+| `{godkannande_text}` | Färdig mening: ”Arbetena godkänns 2026-01-20.” / ”Arbetena godkänns inte.” |
 | `{reklamationsfrister}` | Fritext |
-| `{avhjalpande_deadline}` | T.ex. ”inom 2 månader” |
+| `{avhjalpande_deadline}` | T.ex. ”inom 2 månader” — används i rubriken ”Fel skall vara avhjälpta …” |
 | `{ovriga_noteringar}` | Fritext |
 
 ### Provning/Dokumentation (loop)
@@ -147,8 +157,9 @@ Dataraden ser ut så här (en cell per kolumn):
 
 - Raden upprepas en gång per fel (0–50+ rader).
 - `{bet}` är ”H” när hantverkaren är ansvarig, annars tomt.
-- `{nr}` numreras automatiskt 1, 2, 3 …
+- `{nr}` numreras automatiskt 1, 2, 3 … (punkten efter numret ligger i mallen: `{nr}.`)
 - Sista kolumnen blir alltid tom (fylls i för hand) — `{/fel}` syns inte.
+- Den blå rubrikraden är vanlig cellskuggning — färg/typsnitt ändras fritt i Word.
 
 ### Sändlista (loop)
 ```
@@ -193,6 +204,7 @@ Konsultföretagsblocket använder de gemensamma `{foretag_*}`-taggarna.
 
 | Tagg | Innehåll |
 |---|---|
+| `{narvarande_bestallare}` | Närvarande för beställaren |
 | `{bakgrund}` | 1. Bakgrund till uppdraget (fritext) |
 | `{orsak}` | 3. Orsak till skada (fritext) |
 | `{bedomning}` | 4. Bedömning (fritext) |

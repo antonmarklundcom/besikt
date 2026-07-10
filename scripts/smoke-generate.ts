@@ -58,6 +58,9 @@ async function fixtures(type: LeadType): Promise<BuildInput> {
     report: {
       version: 1,
       dataJson: {
+        avtalsform: "Konsumenttjänster",
+        narvarandeBestallare: "Anna Andersson och John Wästerlund",
+        narvarandeHantverkare: "Karl Nyström\nFredrik Åberg",
         omfattning: "Besiktning av totalrenoverat badrum samt kök.",
         tid: "2026-06-15 kl. 09:00–12:00",
         kallelseDate: "2026-06-01",

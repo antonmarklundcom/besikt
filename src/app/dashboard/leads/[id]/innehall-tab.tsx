@@ -31,6 +31,11 @@ export function InnehallTab({ type, dataJson, setDataJson }: Props) {
   if (type === LeadType.SLUTBESIKTNING) {
     return (
       <div className="space-y-6">
+        <TextField label="Avtalsform" value={str("avtalsform") || "Konsumenttjänster"} onChange={setStr("avtalsform")} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextField label="Närvarande – för beställaren" value={str("narvarandeBestallare")} onChange={setStr("narvarandeBestallare")} />
+          <TextField label="Närvarande – för hantverkaren" value={str("narvarandeHantverkare")} onChange={setStr("narvarandeHantverkare")} />
+        </div>
         <TextAreaField label="Omfattning" value={str("omfattning")} onChange={setStr("omfattning")} />
         <TextField label="Tid" value={str("tid")} onChange={setStr("tid")} placeholder="t.ex. 2026-05-12 kl. 09:00" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -76,6 +81,7 @@ export function InnehallTab({ type, dataJson, setDataJson }: Props) {
   // SKADEUTREDNING — numbered sections
   return (
     <div className="space-y-6">
+      <TextField label="Närvarande – för beställaren" value={str("narvarandeBestallare")} onChange={setStr("narvarandeBestallare")} />
       <TextAreaField label="1. Bakgrund till uppdraget" rows={5} value={str("bakgrund")} onChange={setStr("bakgrund")} />
       <TextAreaField
         label="2. Observationer (punktlista)"

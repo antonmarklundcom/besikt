@@ -124,6 +124,23 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
   utskickshistorik table across versions. Editor now disables all fields
   (native `fieldset disabled`) with an explanatory banner when locked.
 
+### Template restyle (post-Phase 5, 2026-07-10)
+- User supplied the three real reference reports (PDF). Templates rebuilt to
+  match their actual layout: logo header (logos extracted from the PDFs into
+  `templates/assets/`, embedded as ordinary images), "Sid X(Y)" in the header,
+  company-block footer on page 1 + "Filnamn:" footer on later pages, Arial,
+  label/value party blocks, blue fel-tabell with the real column-explanations
+  section, the standard boilerplate texts, and the real signature block.
+- New dataJson fields to match the reference: `avtalsform` (default
+  "Konsumenttjänster"), `narvarandeBestallare`, `narvarandeHantverkare`
+  (+ composed `{godkannande_text}` sentence). Added to Innehåll tabs and
+  PLACEHOLDERS.md.
+- Fixed bullet-loop bug: loop tags now sit in their own paragraphs so each
+  dokumentation/sändlista/observation/åtgärds item gets its own bullet
+  (inline tags concatenated all items into one bullet).
+- Visual verification: rendered all three smoke docx via docx-preview +
+  headless Chromium screenshots and compared against the reference PDFs.
+
 ## Deviations from the brief
 
 _None so far._ Additions that stay within scope:
