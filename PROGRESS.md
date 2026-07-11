@@ -171,6 +171,40 @@ Legend: ✅ done · 🚧 in progress · ⬜ pending
 _DB-dependent items above are verified by reading the implementing code; the
 user runs the full click-through locally against Neon per the user-side track._
 
+### Post-Phase-6 fix — real template styling
+The earlier session's briefing claimed the `.docx` templates had already been
+restyled to match the firm's reference reports; that turned out to be false —
+git history showed only the generic Phase 4 starter templates had ever been
+committed. The user supplied three real reference PDFs (slutbesiktning,
+statusbesiktning, skadeutredning) and `scripts/build-templates.ts` was
+rewritten to match them precisely:
+- Two-column header (house-icon logo left, SBR/Byggingenjörerna badge right on
+  slut/status only) with a rule below; `Sid X(Y)` via native Word PAGE/NUMPAGES
+  fields (not a tag). Different-first-page footer: full company contact block
+  on page 1, `Filnamn: {filnamn}` only on continuation pages.
+- Blue (`#1F5C99`) header row on the fel-tabell and the sändlista table,
+  matching the reference exactly; verified absent on skadeutredning (no
+  fel-tabell there).
+- Boilerplate legal/explanatory text copied verbatim from the references (the
+  Bet/Nr/Del-Rum/Fel/Avhjälpt column explanations, the numbering-convention
+  sentence, "utsedd av beställaren", "medlem i SBR:s entreprenadbesiktningsgrupp").
+  This text is static (no `{tags}`), so it's safe to further edit in Word.
+- Two logo assets (`templates/assets/logo.png`, `templates/assets/badge.png`)
+  are generated as clean SVG→PNG placeholders on first build (real logo files
+  weren't available — only rasterized PDF renders); dropping the firm's real
+  PNGs at those paths and re-running `npm run templates:build` swaps them in
+  with no other changes needed.
+- Two fields visible in the real reports aren't in the app's data model yet
+  and were deliberately omitted rather than faked: **Avtalsform** and
+  **Närvarande** (attendee names). Documented in PLACEHOLDERS.md; add on request.
+- Verified structurally (LibreOffice wasn't usable for a rendered-PDF preview
+  in this sandbox): unzipped the smoke-generated `.docx` files and confirmed
+  zero unresolved `{tags}`, blue shading present on slut/status and absent on
+  skade, all 27 fel-tabell rows repeating individually (not merged), the
+  nested `rekommendationer` loop, the `dokumentation`/`observationer` loops,
+  and the statusbesiktning photo grid all rendering correctly.
+- `npm run build` + `npm run lint` clean; `npm run smoke:generate` clean.
+
 ## Deviations from the brief
 
 _None so far._ Additions that stay within scope:

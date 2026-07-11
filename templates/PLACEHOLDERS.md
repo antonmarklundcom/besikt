@@ -97,10 +97,37 @@ Radbrytningar i inmatad text bevaras (fritextfält kan innehålla flera stycken)
 ### Övrigt
 | Tagg | Innehåll |
 |---|---|
-| `{numrering_text}` | Standardtexten om numrering (”Fönster, dörrar, väggar …”) |
+| `{numrering_text}` | Standardtexten om numrering (”Fönster, dörrar, väggar …”) — ligger inne i avsnittet ”Fel och förhållanden” (slutbesiktning/statusbesiktning). Skadeutredning har ingen fel-tabell och använder inte taggen. |
 
-Sidnumreringen ”Sid X(Y)” är vanliga Word-fält (PAGE/NUMPAGES) i sidfoten —
+Sidnumreringen ”Sid X(Y)” är vanliga Word-fält (PAGE/NUMPAGES) i sidhuvudet —
 inga taggar, stila fritt.
+
+`{ref_nummer}` och `{version}` finns kvar som data men visas inte i den
+löpande texten längre (de riktiga referensrapporterna visar dem inte) — lägg
+gärna till dem själv i Word om du vill se dem i dokumentet.
+
+### Logotyper (statiska bilder, ej datataggar)
+Sidhuvudets logotyper är inte platshållartaggar — de bakas in i mallfilen när
+`npm run templates:build` körs, från:
+
+- `templates/assets/logo.png` — vänster logga (hus-ikon + ”Entreprenad­konsulterna”)
+- `templates/assets/badge.png` — höger SBR/Bygg­ingenjörerna-märke (endast
+  slutbesiktning + statusbesiktning; syns även vid signaturen)
+
+Just nu är dessa **genererade platshållarbilder**. Lägg de riktiga PNG-filerna
+på exakt dessa sökvägar och kör `npm run templates:build` igen — resten av
+mallen ändras inte. (Om du hellre stilar om i Word: infoga bilden direkt i
+sidhuvudet/signaturen i Word i stället — då spelar filerna i `templates/assets/`
+ingen roll längre för just den mallen.)
+
+### Fält som ännu inte fångas i appen
+De riktiga referensrapporterna innehåller två uppgifter som appens formulär
+inte samlar in ännu, så mallarna saknar dem avsiktligt i stället för att visa
+tomma fält:
+- **Avtalsform** (t.ex. ”Konsumenttjänster”)
+- **Närvarande** (namn på personer som deltog vid besiktningen)
+
+Säg till om du vill att dessa läggs till som riktiga fält i formuläret.
 
 ---
 
