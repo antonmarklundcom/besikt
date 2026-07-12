@@ -93,12 +93,32 @@ export function ParterTab({
       )}
 
       {type === LeadType.SKADEUTREDNING && (
-        <section className="space-y-2">
+        <section className="space-y-4">
           <h2 className="text-sm font-semibold">Konsultföretag</h2>
           <p className="text-sm text-muted-foreground">
             Vårt eget företagsblock (Entreprenadkonsulterna Sthlm AB) infogas
             automatiskt från Inställningar vid dokumentgenerering.
           </p>
+        </section>
+      )}
+
+      {(type === LeadType.SLUTBESIKTNING || type === LeadType.SKADEUTREDNING) && (
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold">Närvarande vid besiktningen</h2>
+          <TextField
+            label="För beställaren"
+            value={(dataJson.narvarandeBestallare as string) ?? ""}
+            onChange={(v) => setData("narvarandeBestallare", v)}
+            placeholder="Namn, kommaseparerade"
+          />
+          {type === LeadType.SLUTBESIKTNING && (
+            <TextField
+              label="För hantverkaren"
+              value={(dataJson.narvarandeHantverkare as string) ?? ""}
+              onChange={(v) => setData("narvarandeHantverkare", v)}
+              placeholder="Namn, kommaseparerade"
+            />
+          )}
         </section>
       )}
 
@@ -110,6 +130,12 @@ export function ParterTab({
               + Lägg till
             </Button>
           </div>
+          <TextField
+            label="Avtalsform"
+            value={(dataJson.avtalsform as string) ?? ""}
+            onChange={(v) => setData("avtalsform", v)}
+            placeholder="t.ex. Konsumenttjänster"
+          />
           {contractors.length === 0 && (
             <p className="text-sm text-muted-foreground">Inga hantverkare tillagda.</p>
           )}

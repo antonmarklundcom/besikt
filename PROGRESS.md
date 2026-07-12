@@ -205,6 +205,25 @@ rewritten to match them precisely:
   and the statusbesiktning photo grid all rendering correctly.
 - `npm run build` + `npm run lint` clean; `npm run smoke:generate` clean.
 
+### Post-Phase-6 fix — Avtalsform + Närvarande fields
+The two fields flagged as missing in the template-restyle note above are now
+captured for real, matching the reference reports:
+- **Avtalsform** (slutbesiktning only, e.g. "Konsumenttjänster") — new
+  `dataJson.avtalsform` field, edited on the Parter tab, rendered in the
+  "Avtalade arbeten och parter" section.
+- **Närvarande** (attendee names) — new `dataJson.narvarandeBestallare` /
+  `narvarandeHantverkare` fields (slutbesiktning has both; skadeutredning has
+  only the beställare side, matching its reference), edited on the Parter tab
+  under a new "Närvarande vid besiktningen" section, rendered as their own
+  "Närvarande" section in both templates. Statusbesiktning already had this
+  covered by the existing `lagenhetsinnehavare` field — no change needed there.
+No schema migration — both live in `Report.dataJson` per the existing
+type-specific-fields convention. `template-data.ts`, `parter-tab.tsx`,
+`build-templates.ts`, `scripts/smoke-generate.ts` fixtures, and
+`PLACEHOLDERS.md` all updated together; verified via the unzipped
+smoke-generated `.docx` (both new sections render with zero unresolved tags).
+Build + lint + smoke:generate clean.
+
 ## Deviations from the brief
 
 _None so far._ Additions that stay within scope:

@@ -493,6 +493,7 @@ async function slutbesiktning(): Promise<Document> {
     p("{tid}"),
 
     h2("Avtalade arbeten och parter"),
+    partyRow("Avtalsform:", [p("{avtalsform}")]),
     label("Parter:"),
     partyRow("Beställare /(Konsument):", [
       p("{bestallare_namn}"),
@@ -507,6 +508,11 @@ async function slutbesiktning(): Promise<Document> {
 
     h2("Besiktningsman"),
     partyRow("Besiktningsman:", [p("{besiktningsman_namn} — utsedd av beställaren")]),
+
+    h2("Närvarande"),
+    p("Vid besiktningen var parterna representerade av:"),
+    partyRow("för beställaren:", [p("{narvarande_bestallare}")]),
+    partyRow("för hantverkaren:", [p("{narvarande_hantverkare}")]),
 
     h2("Sättet för kallelse till besiktningen"),
     p("Besiktningsmannen har {kallelse_datum} kallat parterna per {kallelse_satt}."),
@@ -629,6 +635,10 @@ async function skadeutredning(): Promise<Document> {
 
     h2("Besiktningsman"),
     partyRow("Besiktningsman:", [p("{besiktningsman_namn} — utsedd av beställaren")]),
+
+    h2("Närvarande"),
+    p("Vid besiktningen var parterna representerade av:"),
+    partyRow("för beställaren:", [p("{narvarande_bestallare}")]),
 
     h2num("1. Bakgrund till uppdraget"),
     p("{bakgrund}"),
