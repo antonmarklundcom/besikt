@@ -120,15 +120,6 @@ mallen ändras inte. (Om du hellre stilar om i Word: infoga bilden direkt i
 sidhuvudet/signaturen i Word i stället — då spelar filerna i `templates/assets/`
 ingen roll längre för just den mallen.)
 
-### Fält som ännu inte fångas i appen
-De riktiga referensrapporterna innehåller två uppgifter som appens formulär
-inte samlar in ännu, så mallarna saknar dem avsiktligt i stället för att visa
-tomma fält:
-- **Avtalsform** (t.ex. ”Konsumenttjänster”)
-- **Närvarande** (namn på personer som deltog vid besiktningen)
-
-Säg till om du vill att dessa läggs till som riktiga fält i formuläret.
-
 ---
 
 ## SLUTBESIKTNING — `slutbesiktning.docx`
@@ -146,6 +137,9 @@ stycken (de raderna försvinner i det färdiga dokumentet).
 ### Sektioner
 | Tagg | Innehåll |
 |---|---|
+| `{avtalsform}` | T.ex. ”Konsumenttjänster” |
+| `{narvarande_bestallare}` | Namn på personer som var med för beställaren |
+| `{narvarande_hantverkare}` | Namn på personer som var med för hantverkaren |
 | `{omfattning}` | Fritext |
 | `{tid}` | Fritext, t.ex. ”2026-06-15 kl. 09:00–12:00” |
 | `{kallelse_datum}` | Datum |
@@ -220,6 +214,7 @@ Konsultföretagsblocket använder de gemensamma `{foretag_*}`-taggarna.
 
 | Tagg | Innehåll |
 |---|---|
+| `{narvarande_bestallare}` | Namn på personer som var med för beställaren |
 | `{bakgrund}` | 1. Bakgrund till uppdraget (fritext) |
 | `{orsak}` | 3. Orsak till skada (fritext) |
 | `{bedomning}` | 4. Bedömning (fritext) |
