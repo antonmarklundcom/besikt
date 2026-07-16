@@ -74,8 +74,9 @@ Se [`.env.example`](./.env.example) för fullständig lista. Kort:
 | `NEXTAUTH_URL` | Publik URL (se §3 om Hostinger) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seed-admin (rotera efter första inloggning) |
 | `RESEND_API_KEY` / `MAIL_FROM` | Utgående e-post (verifierad avsändardomän) |
-| `PDF_PROVIDER` | `none` (standard) \| `ilovepdf` \| `cloudconvert` |
-| `CLOUDCONVERT_API_KEY` / `ILOVEPDF_PUBLIC_KEY` / `ILOVEPDF_SECRET_KEY` | Endast om PDF-provider är på |
+| `PDF_PROVIDER` | `none` (standard) \| `ilovepdf` \| `cloudconvert` \| `gotenberg` |
+| `CLOUDCONVERT_API_KEY` / `ILOVEPDF_PUBLIC_KEY` / `ILOVEPDF_SECRET_KEY` | Endast om en av dessa providers är på |
+| `GOTENBERG_URL` / `GOTENBERG_SECRET` | Endast om `PDF_PROVIDER=gotenberg` (självhostad, se §5) |
 | `WEBHOOK_SECRET` | Delad hemlighet för `X-Webhook-Secret` (GHL-intag) |
 | `STORAGE_DIR` | Filrot (standard `./storage`; Hostingers beständiga disk i prod) |
 
@@ -129,16 +130,35 @@ Standard är `PDF_PROVIDER=none`: den primära leveransen är den redigerbara
 `.docx`-filen. Användaren sparar som PDF i Word ("Spara som PDF") och laddar upp
 den PDF:en på rapportversionen, eller skickar `.docx` direkt.
 
-För att slå på automatisk konvertering senare (EU-baserade providers med DPA):
+För att slå på automatisk konvertering senare finns tre alternativ:
 
+**A. Tredjeparts-SaaS (EU-baserade providers med DPA)**
 1. Sätt `PDF_PROVIDER=ilovepdf` **eller** `PDF_PROVIDER=cloudconvert` i hPanel.
 2. Sätt motsvarande nycklar (`ILOVEPDF_PUBLIC_KEY` + `ILOVEPDF_SECRET_KEY`,
    eller `CLOUDCONVERT_API_KEY`).
 3. Deploya om. Generering konverterar då automatiskt och sätter `pdfPath`; den
    manuella uppladdningsplatsen ersätts av en auto-PDF-länk.
 
-> **GDPR-notis:** med en PDF-provider påslagen lämnar dokumentinnehållet servern
-> för konvertering. Slå bara på detta med ett DPA på plats.
+> **GDPR-notis:** med en tredjeparts-provider påslagen lämnar
+> dokumentinnehållet servern för konvertering hos den leverantören. Slå bara
+> på detta med ett DPA på plats.
+
+**B. Självhostad konvertering (`PDF_PROVIDER=gotenberg`)** — inga
+tredjepartsavgifter, datan lämnar bara infrastruktur ni själva äger. Kräver att
+ni driftar [Gotenberg](https://gotenberg.dev/) (öppen källkod, kör LibreOffice
++ headless Chromium i en Docker-container) på egen infra, t.ex.:
+- **Google Cloud Run** — skalar till noll (ingen kostnad när den står stilla),
+  har en generös gratiskvot per månad som med ~5–10 konverteringar/vecka
+  sannolikt aldrig överskrids. Deploya Gotenbergs officiella Docker-image
+  direkt.
+- **Oracle Cloud "Always Free"-tier** — en riktigt gratis-för-alltid VM utan
+  användningstak; enklare "alltid på"-server, mer manuell driftsättning
+  (SSH in, installera Docker, kör Gotenberg-containern).
+
+Sätt `PDF_PROVIDER=gotenberg` och `GOTENBERG_URL` (pekar på er instans). Om ni
+lagt en delad hemlighet framför containern (rekommenderas om den är nåbar
+publikt), sätt även `GOTENBERG_SECRET` — den skickas som headern
+`X-Gotenberg-Secret` på varje konverteringsanrop.
 
 ---
 

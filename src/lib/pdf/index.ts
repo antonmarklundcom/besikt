@@ -3,8 +3,9 @@
 // Hostinger has no LibreOffice/system binaries. Switch providers via env only.
 import { convertWithILovePdf } from "./ilovepdf";
 import { convertWithCloudConvert } from "./cloudconvert";
+import { convertWithGotenberg } from "./gotenberg";
 
-export type PdfProvider = "none" | "ilovepdf" | "cloudconvert";
+export type PdfProvider = "none" | "ilovepdf" | "cloudconvert" | "gotenberg";
 
 export class PdfDisabledError extends Error {
   constructor() {
@@ -17,7 +18,7 @@ export class PdfDisabledError extends Error {
 
 export function pdfProvider(): PdfProvider {
   const raw = (process.env.PDF_PROVIDER ?? "none").toLowerCase();
-  if (raw === "ilovepdf" || raw === "cloudconvert") return raw;
+  if (raw === "ilovepdf" || raw === "cloudconvert" || raw === "gotenberg") return raw;
   return "none";
 }
 
@@ -32,6 +33,8 @@ export async function convertToPdf(buffer: Buffer): Promise<Buffer> {
       return convertWithILovePdf(buffer);
     case "cloudconvert":
       return convertWithCloudConvert(buffer);
+    case "gotenberg":
+      return convertWithGotenberg(buffer);
     default:
       throw new PdfDisabledError();
   }
