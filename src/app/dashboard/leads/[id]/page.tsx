@@ -20,7 +20,8 @@ const LOCKED: LeadStatus[] = [
   LeadStatus.ARKIVERAD,
 ];
 
-export default async function LeadPage({ params }: { params: { id: string } }) {
+export default async function LeadPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const lead = await prisma.lead.findUnique({
     where: { id: params.id },
     include: {

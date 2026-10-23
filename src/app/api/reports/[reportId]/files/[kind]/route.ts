@@ -14,8 +14,9 @@ const CONTENT_TYPES: Record<string, string> = {
 // GET /api/reports/[reportId]/files/docx|pdf — stream a generated/uploaded file.
 export async function GET(
   _req: Request,
-  { params }: { params: { reportId: string; kind: string } }
+  props: { params: Promise<{ reportId: string; kind: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

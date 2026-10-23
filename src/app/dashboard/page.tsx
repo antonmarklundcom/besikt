@@ -18,11 +18,10 @@ type SearchParams = {
   sort?: string;
 };
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
+export default async function DashboardPage(props: {
+  searchParams: Promise<SearchParams>;
 }) {
+  const searchParams = await props.searchParams;
   const where: Prisma.LeadWhereInput = {};
 
   if (searchParams.status && searchParams.status in LeadStatus) {

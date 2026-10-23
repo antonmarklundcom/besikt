@@ -15,8 +15,9 @@ export const runtime = "nodejs";
 //   3. Anonymise the Lead row and set status ARKIVERAD.
 export async function DELETE(
   _req: Request,
-  { params }: { params: { leadId: string } }
+  props: { params: Promise<{ leadId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

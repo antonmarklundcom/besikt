@@ -20,8 +20,9 @@ const bodySchema = z.object({
 
 export async function POST(
   req: Request,
-  { params }: { params: { reportId: string } }
+  props: { params: Promise<{ reportId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

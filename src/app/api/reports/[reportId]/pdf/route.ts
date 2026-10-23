@@ -23,8 +23,9 @@ const ALLOWED: LeadStatus[] = [
 
 export async function POST(
   req: Request,
-  { params }: { params: { reportId: string } }
+  props: { params: Promise<{ reportId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 
@@ -82,8 +83,9 @@ export async function POST(
 // Remove the attached PDF (e.g. wrong file uploaded).
 export async function DELETE(
   _req: Request,
-  { params }: { params: { reportId: string } }
+  props: { params: Promise<{ reportId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

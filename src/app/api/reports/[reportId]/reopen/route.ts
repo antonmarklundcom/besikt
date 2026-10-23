@@ -9,8 +9,9 @@ export const runtime = "nodejs";
 // the snapshot must stand; use "Ny version" instead.
 export async function POST(
   _req: Request,
-  { params }: { params: { reportId: string } }
+  props: { params: Promise<{ reportId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 
