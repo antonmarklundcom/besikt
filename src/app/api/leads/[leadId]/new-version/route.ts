@@ -17,8 +17,9 @@ const ALLOWED: LeadStatus[] = [LeadStatus.GODKAND, LeadStatus.SKICKAD];
 
 export async function POST(
   _req: Request,
-  { params }: { params: { leadId: string } }
+  props: { params: Promise<{ leadId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

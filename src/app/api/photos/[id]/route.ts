@@ -17,8 +17,9 @@ const LOCKED: LeadStatus[] = [
 // outside /public for GDPR reasons (§1, §7).
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 
@@ -44,8 +45,9 @@ export async function GET(
 // DELETE — remove the row and unlink the file from disk.
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

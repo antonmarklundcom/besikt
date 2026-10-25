@@ -22,8 +22,9 @@ function emptyToNull(v: string | null | undefined): string | null {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireAdmin();
   if ("response" in auth) return auth.response;
 
@@ -58,8 +59,9 @@ export async function PATCH(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireAdmin();
   if ("response" in auth) return auth.response;
 

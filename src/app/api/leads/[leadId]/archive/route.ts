@@ -10,8 +10,9 @@ export const runtime = "nodejs";
 // destructive one. Archived leads are locked (editing APIs already 409).
 export async function POST(
   _req: Request,
-  { params }: { params: { leadId: string } }
+  props: { params: Promise<{ leadId: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 

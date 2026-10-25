@@ -21,8 +21,9 @@ const ACCEPTED = /^image\/(jpe?g|png|webp)$/i;
 // /public like all other stored assets). Used by the settings preview.
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
 
@@ -50,8 +51,9 @@ export async function GET(
 // pipeline so it's stored as a compressed JPEG under storage/inspectors/{id}/.
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireAdmin();
   if ("response" in auth) return auth.response;
 
@@ -90,8 +92,9 @@ export async function POST(
 // DELETE — remove the signature image and clear the path.
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const auth = await requireAdmin();
   if ("response" in auth) return auth.response;
 
