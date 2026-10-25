@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { loginThrottle } from "@/lib/login-throttle";
 import type { Role } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
@@ -19,13 +20,17 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        });
-        if (!user) return null;
+        const email = credentials.email.toLowerCase().trim();
+        // Too many recent failures for this account: same generic null, even if the password is right.
+        if (loginThrottle.isBlocked(email)) return null;
 
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!valid) return null;
+        const user = await prisma.user.findUnique({ where: { email } });
+        const valid = user ? await bcrypt.compare(credentials.password, user.passwordHash) : false;
+        if (!user || !valid) {
+          loginThrottle.recordFailure(email);
+          return null;
+        }
+        loginThrottle.reset(email);
 
         return {
           id: user.id,
